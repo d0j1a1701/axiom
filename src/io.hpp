@@ -5,6 +5,7 @@
 #include <cstdarg>
 #include <cstring>
 #include <cstdio>
+#include <stdio.h>
 #include <string>
 #include <cmath>
 
@@ -29,13 +30,16 @@ struct IO {
 			fwrite(obuf, 1, pp - obuf, f);
 		}
 #else
-		int (*putchar)(int) = &::putchar;
+		int putchar(const char ch) {
+			return fputc(ch, f);
+		}
 		inline void flush() {};
 #endif
-		char sep = ' ';
+		std::string sep = " ";
 		int k = 2;
-		FILE *f;
+		FILE *f = nullptr;
 		inline void freopen(FILE *F) {
+			flush();
 			if(f && f != stdout) fclose(f);
 			f = F;
 		}
@@ -83,7 +87,7 @@ struct IO {
 		template<typename Tp, typename... Ts>
 		void write(Tp x, Ts... val) {
 			write(x);
-			putchar(sep);
+			write(sep);
 			write(val...);
 		}
 		template<typename... Ts>
@@ -103,8 +107,8 @@ struct IO {
 			va_end(arglist);
 			return res;
 		}
-		inline Printer setsep(const char &c) {
-			return sep = c, *this;
+		inline Printer setsep(const std::string &s) {
+			return sep = s, *this;
 		}
 		inline Printer setprecision(const int &K) {
 			return k = K, *this;
@@ -114,6 +118,11 @@ struct IO {
 		in.freopen(stdout), out.freopen(stdout);
 	}
 	IO(std::string prefix, int id, std::string out_ext = ".out") {
+		auto fin = fopen((prefix + std::to_string(id) + ".in").c_str(), "w");
+		auto fout = fopen((prefix + std::to_string(id) + out_ext).c_str(), "w");
+		in.freopen(fin), out.freopen(fout);
+	}
+	inline void freopen(std::string prefix, int id, std::string out_ext = ".out") {
 		auto fin = fopen((prefix + std::to_string(id) + ".in").c_str(), "w");
 		auto fout = fopen((prefix + std::to_string(id) + out_ext).c_str(), "w");
 		in.freopen(fin), out.freopen(fout);
