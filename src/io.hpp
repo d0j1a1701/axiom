@@ -36,7 +36,7 @@ struct IO {
 		int k = 2;
 		FILE *f;
 		inline void freopen(FILE *F) {
-			if(f != stdout) fclose(f);
+			if(f && f != stdout) fclose(f);
 			f = F;
 		}
 		inline void write(const char &ch) {
