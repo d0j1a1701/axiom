@@ -1,23 +1,24 @@
 #ifndef AXIOM_IO
 #define AXIOM_IO
 
+#include <type_traits>
 #include <iostream>
 #include <cstdarg>
 #include <cstring>
 #include <cstdio>
-#include <stdio.h>
 #include <string>
 #include <cmath>
 
+#include "graph.hpp"
 #include "misc.hpp"
 
 namespace axiom {
 struct IO {
 	struct Printer {
 #ifdef FastIO
-		const static int BUFSIZE = 1 << 20;
+		const static int BUFSIZE = 1 << 18;
 		char obuf[BUFSIZE], *pp;
-		inline void putchar(char x) {
+		inline void putchar(const char x) {
 			((pp - obuf == BUFSIZE && (fwrite(obuf, 1, BUFSIZE, f), pp = obuf)), *pp = x, pp++);
 		}
 		inline void flush() {
@@ -83,6 +84,18 @@ struct IO {
 			int top = 0;
 			for (; top < k; y /= 10) sta[++top] = y % 10 ^ 48;
 			for (int i = top; i > 0; i--) putchar(sta[i]);
+		}
+		template<typename Tp, typename dir>
+		inline std::enable_if_t<std::is_same<Tp, unweighted>::value, void> write(Graph<Tp, dir> g) {
+			for(int i = 1; i <= g.n; i++)
+				for(int j : g.edges[i])
+					writeln(i, j);
+		}
+		template<typename Tp, typename dir>
+		inline std::enable_if_t < !std::is_same<Tp, unweighted>::value, void > write(Graph<Tp, dir> g) {
+			for(int i = 1; i <= g.n; i++)
+				for(auto edge : g.edges[i])
+					writeln(i, edge.v, edge.w);
 		}
 		template<typename Tp, typename... Ts>
 		void write(Tp x, Ts... val) {
