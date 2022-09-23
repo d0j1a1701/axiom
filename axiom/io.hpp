@@ -14,7 +14,7 @@
 namespace axiom {
 struct IO {
 	struct Printer {
-#ifdef FIO
+#ifdef FastIO
 		const static int BUFSIZE = 1 << 20;
 		char obuf[BUFSIZE], *pp;
 		inline void putchar(char x) {

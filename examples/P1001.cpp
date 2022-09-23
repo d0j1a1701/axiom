@@ -1,4 +1,4 @@
-#include "../src/axiom.hpp"
+#include "../axiom/axiom.hpp"
 #include <iostream>
 #include <cmath>
 using namespace axiom;

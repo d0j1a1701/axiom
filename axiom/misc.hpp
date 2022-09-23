@@ -18,6 +18,12 @@ namespace axiom {
 template <typename... >
 using void_t = void;
 
+template<class _Ty1, class _Ty2>
+struct is_not_same : std::true_type {};
+template<class _Ty1>
+struct is_not_same<_Ty1, _Ty1> : std::false_type {};
+
+
 template <class T, class = void>
 struct is_iterator : std::false_type { };
 
