@@ -9,7 +9,7 @@ int main() {
 		int n = 100000, m = 200000;
 		io.in.writeln(n, m);
 		Graph g = graph.regular<int>(n, m);
-		io.in.writeln(g.stringify());
+		io.in.write(g);
 		printf("Generated #%d\n", _);
 	}
 	system("pause");
