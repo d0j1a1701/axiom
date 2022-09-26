@@ -1,5 +1,5 @@
 /*
-Axiom 0.1.0
+Axiom 0.1.1
 By d0j1a_1701
 https://github.com/d0j1a1701/axiom
 */
@@ -9,5 +9,6 @@ https://github.com/d0j1a1701/axiom
 #include "random.hpp"
 #include "graph.hpp"
 #include "misc.hpp"
+#include "hmap.hpp"
 #include "io.hpp"
 #endif

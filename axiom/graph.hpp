@@ -69,7 +69,7 @@ struct Graph {
 	inline std::string stringify() {
 		std::stringstream ss;
 		for(int i = 1; i <= n; i++)
-			for(Edge e : edges[i])
+			for(auto e : edges[i])
 				ss << i << ' ' << e.v << ' ' << e.w << '\n';
 		return ss.str();
 	}
@@ -82,9 +82,6 @@ struct Graph<unweighted, dir> {
 	Graph() = delete;
 	Graph(int N) {
 		this->resize(N);
-	}
-	Graph direct(bool d = true) {
-		return this->directed = d, *this;
 	}
 	inline void add(int u, int v) {
 		edges[u].emplace_back(v);
@@ -115,6 +112,7 @@ struct GraphFactory {
 		while(m) {
 			int u = rnd.next(1, n), v = rnd.next(1, n);
 			if(u > v)	std::swap(u, v);
+			if(u == v)	continue;
 			if(s.count((long long)u * (n + 1) + v))	continue;
 			s.insert((long long)u * (n + 1) + v);
 			res.add(u, v);
@@ -129,6 +127,7 @@ struct GraphFactory {
 		while(m) {
 			int u = rnd.next(1, n), v = rnd.next(1, n);
 			if(u > v)	std::swap(u, v);
+			if(u == v)	continue;
 			if(s.count((long long)u * (n + 1) + v))	continue;
 			s.insert((long long)u * (n + 1) + v);
 			res.add(u, v, rng());
@@ -190,6 +189,7 @@ struct GraphFactory {
 		while(i < m) {
 			int u = rnd.next(1, n), v = rnd.next(1, n);
 			if(u > v)	std::swap(u, v);
+			if(u == v)	continue;
 			if(s.count((long long)u * (n + 1) + v))	continue;
 			s.insert((long long)u * (n + 1) + v);
 			res.add(u, v);
@@ -211,6 +211,7 @@ struct GraphFactory {
 		while(i < m) {
 			int u = rnd.next(1, n), v = rnd.next(1, n);
 			if(u > v)	std::swap(u, v);
+			if(u == v)	continue;
 			if(s.count((long long)u * (n + 1) + v))	continue;
 			s.insert((long long)u * (n + 1) + v);
 			res.add(u, v, rng());

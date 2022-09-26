@@ -6,7 +6,9 @@
 #include <random>
 #include <chrono>
 #include <vector>
+#include <set>
 
+#include "hset.hpp"
 #include "misc.hpp"
 
 namespace axiom {
@@ -48,10 +50,13 @@ inline static unsigned long long mapping(unsigned long long base, unsigned long 
 
 struct xorshf96 {
 	unsigned int x = 114514, y = 362436069, z = 521288629;
-	xorshf96(unsigned int seed) {
+	xorshf96(unsigned int seed = 114514) {
 		seed = x;
 	}
-	unsigned int operator()() {
+	inline void seed(unsigned int s) {
+		x = s;
+	}
+	inline unsigned int operator()() {
 		unsigned int t;
 		x ^= x << 16;
 		x ^= x >> 5;
@@ -62,9 +67,19 @@ struct xorshf96 {
 	}
 };
 
-static xorshf96 random_base(std::chrono::system_clock::now().time_since_epoch().count());
+static xorshf96 random_base;
 
 struct Random {
+	template<typename Tp>
+	struct Sequence {
+		std::vector<Tp> vec;
+		inline Sequence(Tp n, Tp a, Tp b) {
+
+		}
+	};
+	Random() {
+		random_base.seed(std::chrono::system_clock::now().time_since_epoch().count());
+	}
 	template<typename Tp, typename std::enable_if<
 	             std::is_integral<Tp>::value>::type * = nullptr>
 	static Tp next(Tp l, Tp r) {
