@@ -16,12 +16,14 @@ template<typename Key, typename Value, typename hs = std::hash<Key> >
 class HashMap {
 		using pkv = std::pair<Key, Value>;
 		const double alpha = 0.8;
+		const size_t npos = -1ull;
 		std::vector<unsigned long>::const_iterator size_iter = constant::prime_list.begin();
 		std::vector<bool> used;
 		std::vector<pkv> vec;
+		std::pair<Key, size_t> cache;
 		hs hsfunc;
 		int n;
-		inline void rehash(const Key &k, const Value &v) {
+		inline Value &rehash(const Key &k, const Value &v) {
 			auto Vec = vec;
 			auto Used = used;
 			vec.clear(), used.clear(), n = 0;
@@ -29,7 +31,15 @@ class HashMap {
 			for(size_t i = 0; i < Vec.size(); i++)
 				if(Used[i])
 					insert(Vec[i]);
-			insert(std::make_pair(k, v));
+			return insert(std::make_pair(k, v));
+		}
+		inline size_t find(const Key &k) {
+			if(cache.first == k && used[cache.second])	return cache.second;
+			size_t idx = hsfunc(k) % vec.size(), fr = idx;
+			while(idx < vec.size() && !(used[idx] && vec[idx].first == k))   idx++;
+			if(idx == vec.size())	idx = 0;
+			while(idx < fr && !(used[idx] && vec[idx].first == k))           idx++;
+			return used[idx] && vec[idx].first == k ? (cache = std::make_pair(k, idx), idx) : npos;
 		}
 	public:
 		HashMap() {
@@ -43,7 +53,7 @@ class HashMap {
 			std::fill(used.begin(), used.end(), 0);
 			n = 0;
 		}
-		inline void insert(const pkv &p) {
+		inline Value &insert(const pkv &p) {
 			const Key &k = p.first;
 			const Value &v = p.second;
 			size_t idx = hsfunc(k) % vec.size(), fr = idx;
@@ -52,33 +62,37 @@ class HashMap {
 			while(idx < fr && used[idx] && vec[idx].first != k)    idx++;
 			if(used[idx] && vec[idx].first == k)  vec[idx].second = v;
 			if(!used[idx]) {
-				if((++n) * 1.0 / vec.size() >= alpha) rehash(k, v);
-				else used[idx] = 1, vec[idx] = std::make_pair(k, v);
-			} else rehash(k, v);
+				if((++n) * 1.0 / vec.size() >= alpha) return rehash(k, v);
+				else return used[idx] = 1, cache = std::make_pair(k, idx), vec[idx] = std::make_pair(k, v), vec[idx].second;
+			}
+			return rehash(k, v);
 		}
-		inline void insert(const Key &k, const Value &v) {
-			insert(std::make_pair(k, v));
+		inline Value &emplace(const Key &k, const Value &v) {
+			return insert(std::make_pair(k, v));
 		}
 		inline int count(const Key &x) {
-			size_t idx = hsfunc(x) % vec.size(), fr = idx;
-			while(idx < vec.size() && !(used[idx] && vec[idx].first == x))   idx++;
-			if(idx == vec.size())	idx = 0;
-			while(idx < fr && !(used[idx] && vec[idx].first == x))           idx++;
-			return used[idx] && vec[idx].first == x;
+			return find(x) != npos;
 		}
 		inline void erase(const Key &x) {
-			size_t idx = hsfunc(x) % vec.size(), fr = idx;
-			while(idx < vec.size() && !(used[idx] && vec[idx].first == x))   idx++;
-			if(idx == vec.size())	idx = 0;
-			while(idx < fr && !(used[idx] && vec[idx].first == x))           idx++;
-			if(used[idx] && vec[idx].first == x) used[idx] = 0;
+			size_t idx = find(x);
+			if(idx != npos) used[idx] = 0;
 		}
 		inline Value at(const Key &x) {
-			size_t idx = hsfunc(x) % vec.size(), fr = idx;
-			while(idx < vec.size() && !(used[idx] && vec[idx].first == x))   idx++;
+			size_t idx = find(x);
+			return idx != npos ? vec[idx].second : Value();
+		}
+		inline Value &operator[](const Key &k) {
+			if(cache.first == k && used[cache.second])	return vec[cache.second].second;
+			size_t idx = hsfunc(k) % vec.size(), fr = idx;
+			while(idx < vec.size() && used[idx] && vec[idx].first != k)   idx++;
 			if(idx == vec.size())	idx = 0;
-			while(idx < fr && !(used[idx] && vec[idx].first == x))           idx++;
-			return vec[idx].second;
+			while(idx < fr && used[idx] && vec[idx].first != k)    idx++;
+			if(used[idx] && vec[idx].first == k)  return cache = std::make_pair(k, idx), vec[idx].second;
+			if(!used[idx]) {
+				if((++n) * 1.0 / vec.size() >= alpha) return rehash(k, Value());
+				else return used[idx] = 1, vec[idx] = std::make_pair(k, Value()), vec[idx].second;
+			}
+			return rehash(k, Value());
 		}
 		inline size_t size() {
 			return n;

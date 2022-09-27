@@ -1,11 +1,12 @@
-#define FastIO
+//#define FastIO
 #include "../axiom/axiom.hpp"
 #include <iostream>
 using namespace axiom;
 using namespace std;
+IO io;
 int main() {
 	for(int _ = 1; _ <= 10; _++) {
-		IO io("path", _);
+		io.freopen("path", _);
 		int n = 100000, m = 200000;
 		io.in.writeln(n, m);
 		Graph g = graph.regular<int>(n, m);

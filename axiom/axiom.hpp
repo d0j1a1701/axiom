@@ -1,6 +1,6 @@
 /*
-Axiom 0.1.1
-By d0j1a_1701
+Project Axiom
+Code by d0j1a_1701
 https://github.com/d0j1a1701/axiom
 */
 
@@ -10,5 +10,6 @@ https://github.com/d0j1a1701/axiom
 #include "graph.hpp"
 #include "misc.hpp"
 #include "hmap.hpp"
+#include "hset.hpp"
 #include "io.hpp"
 #endif

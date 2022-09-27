@@ -6,18 +6,17 @@
 #include <random>
 #include <chrono>
 #include <vector>
-#include <set>
 
-#include "hset.hpp"
+#include "hmap.hpp"
 #include "misc.hpp"
 
 namespace axiom {
 namespace fastrange {
 /* https://github.com/lemire/fastrange */
-inline static uint32_t fastrange32(uint32_t word, uint32_t p) {
+inline uint32_t fastrange32(uint32_t word, uint32_t p) {
 	return (uint32_t)(((uint64_t)word * (uint64_t)p) >> 32);
 }
-inline static uint64_t fastrange64(uint64_t word, uint64_t p) {
+inline uint64_t fastrange64(uint64_t word, uint64_t p) {
 #ifdef __SIZEOF_INT128__ // then we know we have a 128-bit int
 	return (uint64_t)(((__uint128_t)word * (__uint128_t)p) >> 64);
 #elif defined(_MSC_VER) && defined(_WIN64)
@@ -34,75 +33,98 @@ inline static uint64_t fastrange64(uint64_t word, uint64_t p) {
 	return word % p; // fallback
 #endif // __SIZEOF_INT128__
 }
-inline static int mapping(int base, int l, int r) {
+inline int mapping(int base, int l, int r) {
 	return l + fastrange32(base, r - l + 1);
 }
-inline static long long mapping(long long base, long long l, long long r) {
+inline long long mapping(long long base, long long l, long long r) {
 	return l + fastrange64(base, r - l + 1);
 }
-inline static unsigned int mapping(unsigned int base, unsigned int l, unsigned int r) {
+inline unsigned int mapping(unsigned int base, unsigned int l, unsigned int r) {
 	return l + fastrange32(base, r - l + 1);
 }
-inline static unsigned long long mapping(unsigned long long base, unsigned long long l, unsigned long long r) {
+inline unsigned long long mapping(unsigned long long base, unsigned long long l, unsigned long long r) {
 	return l + fastrange64(base, r - l + 1);
 }
 };
 
-struct xorshf96 {
-	unsigned int x = 114514, y = 362436069, z = 521288629;
-	xorshf96(unsigned int seed = 114514) {
-		seed = x;
+struct xorshf128 {
+	unsigned long long a = 114514, b = 362436069, t = 1919810;
+	xorshf128(unsigned int seed = 114514) {
+		a = seed;
 	}
 	inline void seed(unsigned int s) {
-		x = s;
+		a = s;
 	}
 	inline unsigned int operator()() {
-		unsigned int t;
-		x ^= x << 16;
-		x ^= x >> 5;
-		x ^= x << 1;
-		t = x, x = y, y = z;
-		z = t ^ x ^ y;
-		return z;
+		a ^= a << 23, a ^= a >> 18;
+		a ^= b, a ^= b >> 5;
+		t = a, a = b, b = t;
+		return a + b;
 	}
 };
 
-static xorshf96 random_base;
+struct xorshf128_64 {
+	unsigned long long a = 114514, b = 362436069, t = 1919810;
+	xorshf128_64(unsigned long long seed = 114514) {
+		a = seed;
+	}
+	inline void seed(unsigned long long s) {
+		a = s;
+	}
+	inline unsigned long long operator()() {
+		a ^= a << 23, a ^= a >> 18;
+		a ^= b, a ^= b >> 5;
+		t = a, a = b, b = t;
+		return a + b;
+	}
+};
 
+template<typename Rng = xorshf128>
 struct Random {
-	template<typename Tp>
 	struct Sequence {
-		std::vector<Tp> vec;
-		inline Sequence(Tp n, Tp a, Tp b) {
-
+		std::vector<unsigned long long> vec;
+		inline Sequence(int n, unsigned long long m, const Random &rnd) {
+			HashMap<unsigned long long, unsigned long long> rest(n);
+			vec.clear(), vec.resize(n);
+			for(int i = 0; i < n; i++)	vec[i] = i + 1;
+			for(int i = 0; i < n; i++) {
+				int j = rnd.next(i, m - 1);
+				if(j < n)	std::swap(vec[i], vec[j]);
+				else if(!rest.count(j))	rest[j] = vec[i], vec[i] = j + 1;
+				else std::swap(vec[i], rest[j]);
+			}
 		}
 	};
+	Rng random_base;
 	Random() {
 		random_base.seed(std::chrono::system_clock::now().time_since_epoch().count());
 	}
 	template<typename Tp, typename std::enable_if<
 	             std::is_integral<Tp>::value>::type * = nullptr>
-	static Tp next(Tp l, Tp r) {
+	Tp next(Tp l, Tp r) {
 		return fastrange::mapping((Tp)random_base(), l, r);
 	}
 	template<typename Tp, typename std::enable_if<
 	             std::is_floating_point<Tp>::value>::type * = nullptr>
-	static Tp next(Tp l, Tp r) {
+	Tp next(Tp l, Tp r) {
 		return std::uniform_real_distribution<Tp> {l, r}(random_base);
 	}
 	template<typename Iter, typename std::enable_if<
 	             is_iterator<Iter>::value>::type * = nullptr>
-	static Iter next(const Iter &a, const Iter &b) {
+	Iter next(const Iter &a, const Iter &b) {
 		return a + next((size_t)0, std::distance(a, b) - 1);
 	}
 	template<typename Tp>
-	static typename Tp::value_type next(const Tp &container) {
+	typename Tp::value_type next(const Tp &container) {
 		return *(begin(container) + next((size_t)0, container.size() - 1));
 	}
 	template<typename Tp>
-	static Tp next(const std::initializer_list<Tp> &arr) {
+	Tp next(const std::initializer_list<Tp> &arr) {
 		return *(arr.begin() + next((size_t)0, arr.size() - 1));
 	}
-} rnd;
+};
+
+Random<xorshf128> rnd;
+
 };
 #endif

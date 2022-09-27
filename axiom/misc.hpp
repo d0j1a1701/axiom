@@ -45,7 +45,7 @@ inline std::vector<long long> d2ll(std::initializer_list<double> arr) {
 	return res;
 }
 struct exhash { //虽然我觉得应该没有人会去Hack自己 但最好预防一下
-	inline static uint64_t splitmix64(uint64_t x) {
+	inline uint64_t splitmix64(uint64_t x) const {
 		// http://xorshift.di.unimi.it/splitmix64.c
 		x += 0x9e3779b97f4a7c15;
 		x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9;

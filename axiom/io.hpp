@@ -18,24 +18,27 @@ struct IO {
 				std::string sep = " ";
 				int k = 2;
 				FILE *f = nullptr;
+#ifdef FastIO
+				const static int BUFSIZE = 1 << 16;
+				char *obuf, *pp;
+#endif
 			public:
 #ifdef FastIO
-				const static int BUFSIZE = 1 << 18;
-				char obuf[BUFSIZE], *pp;
-				inline Printer putchar(const char x) {
+				inline Printer &putchar(const char x) {
 					return ((pp - obuf == BUFSIZE && (fwrite(obuf, 1, BUFSIZE, f), pp = obuf)), *pp = x, pp++), *this;
 				}
-				inline Printer flush() {
+				inline Printer &flush() {
 					return fwrite(obuf, 1, pp - obuf, f), pp = obuf, *this;
 				}
 				Printer() {
+					obuf = new char[BUFSIZE];
 					pp = obuf, f = stdout;
 				}
 				~Printer() {
 					fwrite(obuf, 1, pp - obuf, f);
 				}
 #else
-				inline Printer putchar(const char ch) {
+				inline const Printer &putchar(const char ch) {
 					return fputc(ch, f), *this;
 				}
 				inline void flush() {};
@@ -45,12 +48,12 @@ struct IO {
 					if(f && f != stdout) fclose(f);
 					f = F;
 				}
-				inline void write(const char &ch) {
-					putchar(ch);
+				inline const Printer &write(const char &ch) {
+					return putchar(ch), *this;
 				}
 				template<typename Tp, typename std::enable_if<
 				             std::is_integral<Tp>::value>::type * = nullptr>
-				inline void write(Tp x) {
+				inline const Printer & write(Tp x) {
 					if (x < 0)	write('-'), x = -x;
 					static char sta[20];
 					int top = 0;
@@ -58,24 +61,27 @@ struct IO {
 					while (x);
 					while (top)
 						putchar(sta[--top]);
+					return *this;
 				}
-				inline void write(const std::string &str) {
+				inline const Printer &write(const std::string &str) {
 					for(char ch : str)    putchar(ch);
+					return *this;
 				}
-				inline void write(const char *str) {
+				inline const Printer &write(const char *str) {
 					const char *p = str;
 					while(*p != '\0')	putchar(*p), p++;
+					return *this;
 				}
 				template<typename Tp, typename std::enable_if<
 				             std::is_floating_point<Tp>::value>::type * = nullptr>
-				inline void write(Tp x) {
-					if(std::isnan(x))	return write("nan"), (void)0;
-					if(std::isinf(x))	return write("inf"), (void)0;
+				inline const Printer & write(Tp x) {
+					if(std::isnan(x))	return write("nan"), *this;
+					if(std::isinf(x))	return write("inf"), *this;
 					int n = constant::pow10[k];
 					if (x == 0) {
 						putchar('0'), putchar('.');
 						for (int i = 1; i <= k; ++i) putchar('0');
-						return;
+						return *this;
 					}
 					if (x < 0) putchar('-'), x = -x;
 					long long y = (long long)(x * n) % n;
@@ -85,32 +91,38 @@ struct IO {
 					int top = 0;
 					for (; top < k; y /= 10) sta[++top] = y % 10 ^ 48;
 					for (int i = top; i > 0; i--) putchar(sta[i]);
+					return *this;
 				}
 				template<typename Tp, typename dir, typename std::enable_if<std::is_same<Tp, unweighted>::value>::type * = nullptr>
-				inline void write(Graph<Tp, dir> g) {
+				inline const Printer & write(Graph<Tp, dir> g) {
 					for(int i = 1; i <= g.n; i++)
 						for(int j : g.edges[i])
 							writeln(i, j);
+					return *this;
 				}
 				template < typename Tp, typename dir, typename std::enable_if < !std::is_same<Tp, unweighted>::value >::type * = nullptr >
-				inline void write(Graph<Tp, dir> g) {
+				inline const Printer & write(Graph<Tp, dir> g) {
 					for(int i = 1; i <= g.n; i++)
 						for(auto edge : g.edges[i])
 							writeln(i, edge.v, edge.w);
+					return *this;
 				}
 				template<typename Tp, typename... Ts>
-				void write(Tp x, Ts... val) {
+				const Printer &write(Tp x, Ts... val) {
 					write(x);
 					write(sep);
 					write(val...);
+					return *this;
 				}
 				template<typename... Ts>
-				void writeln(Ts... val) {
+				const Printer &writeln(Ts... val) {
 					write(val...);
 					putchar('\n');
+					return *this;
 				}
-				inline void writeln(void) {
+				inline const Printer &writeln(void) {
 					putchar('\n');
+					return *this;
 				}
 				inline int printf(const char *form, ...) {
 					flush();

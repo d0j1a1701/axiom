@@ -11,6 +11,7 @@
 #include <set>
 
 #include "random.hpp"
+#include "hset.hpp"
 #include "misc.hpp"
 
 namespace axiom {
@@ -108,7 +109,7 @@ struct GraphFactory {
 	template <typename dir = undirected>
 	inline Graph<unweighted, dir> regular(int n, int m) {
 		Graph<unweighted, dir> res(n);
-		std::set<long long> s;//我实在不知道有什么更好的方法了
+		HashSet<long long> s(m);
 		while(m) {
 			int u = rnd.next(1, n), v = rnd.next(1, n);
 			if(u > v)	std::swap(u, v);
@@ -123,7 +124,7 @@ struct GraphFactory {
 	template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
 	inline Graph<Tp, dir> regular(int n, int m, wg rng = {1, 1}) {
 		Graph<Tp, dir> res(n);
-		std::set<long long> s;
+		HashSet<long long> s(m);
 		while(m) {
 			int u = rnd.next(1, n), v = rnd.next(1, n);
 			if(u > v)	std::swap(u, v);
@@ -178,7 +179,7 @@ struct GraphFactory {
 	template <typename dir = undirected>
 	inline Graph<unweighted, dir> DAG(int n, int m) {
 		Graph<unweighted, dir> res(n);
-		std::set<long long> s;
+		HashSet<long long> s(m);
 		auto buf = tree(n);
 		for(int i = 1; i <= n; i++)
 			for(int j : buf.edges[i]) {
@@ -199,7 +200,7 @@ struct GraphFactory {
 	}
 	template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
 	inline Graph<Tp, dir> DAG(int n, int m, wg rng = {1, 1}) {
-		std::set<long long> s;
+		HashSet<long long> s(m);
 		Graph<Tp, dir> res(n);
 		auto buf = tree(n);
 		for(int i = 1; i <= n; i++)
