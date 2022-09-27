@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <iostream>
 #include <sstream>
+#include <utility>
 #include <cstdio>
 #include <vector>
 #include <list>
@@ -105,121 +106,132 @@ struct Graph<unweighted, dir> {
 	}
 };
 
-struct GraphFactory {
-	template <typename dir = undirected>
-	inline Graph<unweighted, dir> regular(int n, int m) {
-		Graph<unweighted, dir> res(n);
-		HashSet<long long> s(m);
-		while(m) {
-			int u = rnd.next(1, n), v = rnd.next(1, n);
-			if(u > v)	std::swap(u, v);
-			if(u == v)	continue;
-			if(s.count((long long)u * (n + 1) + v))	continue;
-			s.insert((long long)u * (n + 1) + v);
-			res.add(u, v);
-			m--;
-		}
-		return res;
-	}
-	template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
-	inline Graph<Tp, dir> regular(int n, int m, wg rng = {1, 1}) {
-		Graph<Tp, dir> res(n);
-		HashSet<long long> s(m);
-		while(m) {
-			int u = rnd.next(1, n), v = rnd.next(1, n);
-			if(u > v)	std::swap(u, v);
-			if(u == v)	continue;
-			if(s.count((long long)u * (n + 1) + v))	continue;
-			s.insert((long long)u * (n + 1) + v);
-			res.add(u, v, rng());
-			m--;
-		}
-		return res;
-	}
-	template <typename dir = undirected>
-	inline Graph<unweighted, dir> tree(int n, double chain = 0, double flower = 0) {
-		Graph<unweighted, dir> res(n);
-		int chain_count = std::min((int)((n - 1) * chain), n - 1);
-		int flower_count = (n - 1) * flower;
-		if(chain_count + flower_count > n - 1)	flower_count = n - 1 - chain_count;
-		int random_count = n - 1 - chain_count - flower_count;
-		for(int i = 2; i <= chain_count + 1; i++)	res.add(i - 1, i);
-		for(int i = chain_count + 2; i <= chain_count + flower_count + 1; i++)	res.add(1, i);
-		for(int i = n - random_count + 1; i <= n; i++)	res.add(rnd.next(1, i - 1), i);
-		return res;
-	}
-	template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
-	inline Graph<Tp, dir> tree(int n, wg rng = {1, 1}, double chain = 0, double flower = 0) {
-		Graph<Tp, dir> res(n);
-		int chain_count = std::min((int)((n - 1) * chain), n - 1);
-		int flower_count = (n - 1) * flower;
-		if(chain_count + flower_count > n - 1)	flower_count = n - 1 - chain_count;
-		int random_count = n - 1 - chain_count - flower_count;
-		for(int i = 2; i <= chain_count + 1; i++)	res.add(i - 1, i, rng());
-		for(int i = chain_count + 2; i <= chain_count + flower_count + 1; i++)	res.add(1, i, rng());
-		for(int i = n - random_count + 1; i <= n; i++)	res.add(rnd.next(1, i - 1), i, rng());
-		return res;
-	}
-	template <typename dir = undirected>
-	inline Graph<unweighted, dir> chain(int n) {
-		return tree<dir>(n, 1, 0);
-	}
-	template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
-	inline Graph<Tp, dir> chain(int n, wg rng = {1, 1}) {
-		return tree<Tp, dir>(n, rng, 1, 0);
-	}
-	template <typename dir = undirected>
-	inline Graph<unweighted, dir> flower(int n) {
-		return tree<dir>(n, 0, 1);
-	}
-	template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
-	inline Graph<Tp, dir> flower(int n, wg rng = {1, 1}) {
-		return tree<Tp, dir>(n, rng, 0, 1);
-	}
-	template <typename dir = undirected>
-	inline Graph<unweighted, dir> DAG(int n, int m) {
-		Graph<unweighted, dir> res(n);
-		HashSet<long long> s(m);
-		auto buf = tree(n);
-		for(int i = 1; i <= n; i++)
-			for(int j : buf.edges[i]) {
-				s.insert((long long)i * (n + 1) + j);
-				res.add(i, j);
+class GraphFactory {
+		inline std::pair<int, int> calc_uv(int n, long long edge_id) {
+			int l = 1, r = n, u = -1, v = -1;
+			while(l <= r) {
+				long long mid = l + ((r - l) >> 1);
+				if((((n << 1) - mid) * (mid - 1) >> 1) < edge_id)	u = mid, l = mid + 1;
+				else r = mid - 1;
 			}
-		int i = n - 1;
-		while(i < m) {
-			int u = rnd.next(1, n), v = rnd.next(1, n);
-			if(u > v)	std::swap(u, v);
-			if(u == v)	continue;
-			if(s.count((long long)u * (n + 1) + v))	continue;
-			s.insert((long long)u * (n + 1) + v);
-			res.add(u, v);
-			i++;
+			v = edge_id - ((long long)((n << 1) - u) * (u - 1) >> 1) + u;
+			return std::make_pair(u, v);
 		}
-		return res;
-	}
-	template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
-	inline Graph<Tp, dir> DAG(int n, int m, wg rng = {1, 1}) {
-		HashSet<long long> s(m);
-		Graph<Tp, dir> res(n);
-		auto buf = tree(n);
-		for(int i = 1; i <= n; i++)
-			for(int j : buf.edges[i]) {
-				s.insert((long long)i * (n + 1) + j);
-				res.add(i, j, rng());
+	public:
+		template <typename dir = undirected>
+		inline Graph<unweighted, dir> regular(int n, int m) {
+			Graph<unweighted, dir> res(n);
+			HashSet<long long> s(m);
+			while(m) {
+				int u = rnd.next(1, n), v = rnd.next(1, n);
+				if(u > v)	std::swap(u, v);
+				if(u == v)	continue;
+				if(s.count((long long)u * (n + 1) + v))	continue;
+				s.insert((long long)u * (n + 1) + v);
+				res.add(u, v);
+				m--;
 			}
-		int i = n - 1;
-		while(i < m) {
-			int u = rnd.next(1, n), v = rnd.next(1, n);
-			if(u > v)	std::swap(u, v);
-			if(u == v)	continue;
-			if(s.count((long long)u * (n + 1) + v))	continue;
-			s.insert((long long)u * (n + 1) + v);
-			res.add(u, v, rng());
-			i++;
+			return res;
 		}
-		return res;
-	}
+		template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
+		inline Graph<Tp, dir> regular(int n, int m, wg rng = {1, 1}) {
+			Graph<Tp, dir> res(n);
+			HashSet<long long> s(m);
+			while(m) {
+				int u = rnd.next(1, n), v = rnd.next(1, n);
+				if(u > v)	std::swap(u, v);
+				if(u == v)	continue;
+				if(s.count((long long)u * (n + 1) + v))	continue;
+				s.insert((long long)u * (n + 1) + v);
+				res.add(u, v, rng());
+				m--;
+			}
+			return res;
+		}
+		template <typename dir = undirected>
+		inline Graph<unweighted, dir> tree(int n, double chain = 0, double flower = 0) {
+			Graph<unweighted, dir> res(n);
+			int chain_count = std::min((int)((n - 1) * chain), n - 1);
+			int flower_count = (n - 1) * flower;
+			if(chain_count + flower_count > n - 1)	flower_count = n - 1 - chain_count;
+			int random_count = n - 1 - chain_count - flower_count;
+			for(int i = 2; i <= chain_count + 1; i++)	res.add(i - 1, i);
+			for(int i = chain_count + 2; i <= chain_count + flower_count + 1; i++)	res.add(1, i);
+			for(int i = n - random_count + 1; i <= n; i++)	res.add(rnd.next(1, i - 1), i);
+			return res;
+		}
+		template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
+		inline Graph<Tp, dir> tree(int n, wg rng = {1, 1}, double chain = 0, double flower = 0) {
+			Graph<Tp, dir> res(n);
+			int chain_count = std::min((int)((n - 1) * chain), n - 1);
+			int flower_count = (n - 1) * flower;
+			if(chain_count + flower_count > n - 1)	flower_count = n - 1 - chain_count;
+			int random_count = n - 1 - chain_count - flower_count;
+			for(int i = 2; i <= chain_count + 1; i++)	res.add(i - 1, i, rng());
+			for(int i = chain_count + 2; i <= chain_count + flower_count + 1; i++)	res.add(1, i, rng());
+			for(int i = n - random_count + 1; i <= n; i++)	res.add(rnd.next(1, i - 1), i, rng());
+			return res;
+		}
+		template <typename dir = undirected>
+		inline Graph<unweighted, dir> chain(int n) {
+			return tree<dir>(n, 1, 0);
+		}
+		template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
+		inline Graph<Tp, dir> chain(int n, wg rng = {1, 1}) {
+			return tree<Tp, dir>(n, rng, 1, 0);
+		}
+		template <typename dir = undirected>
+		inline Graph<unweighted, dir> flower(int n) {
+			return tree<dir>(n, 0, 1);
+		}
+		template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
+		inline Graph<Tp, dir> flower(int n, wg rng = {1, 1}) {
+			return tree<Tp, dir>(n, rng, 0, 1);
+		}
+		template <typename dir = undirected>
+		inline Graph<unweighted, dir> DAG(int n, int m) {
+			Graph<unweighted, dir> res(n);
+			HashSet<long long> s(m);
+			auto buf = tree(n);
+			for(int i = 1; i <= n; i++)
+				for(int j : buf.edges[i]) {
+					s.insert((long long)i * (n + 1) + j);
+					res.add(i, j);
+				}
+			int i = n - 1;
+			while(i < m) {
+				int u = rnd.next(1, n), v = rnd.next(1, n);
+				if(u > v)	std::swap(u, v);
+				if(u == v)	continue;
+				if(s.count((long long)u * (n + 1) + v))	continue;
+				s.insert((long long)u * (n + 1) + v);
+				res.add(u, v);
+				i++;
+			}
+			return res;
+		}
+		template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
+		inline Graph<Tp, dir> DAG(int n, int m, wg rng = {1, 1}) {
+			HashSet<long long> s(m);
+			Graph<Tp, dir> res(n);
+			auto buf = tree(n);
+			for(int i = 1; i <= n; i++)
+				for(int j : buf.edges[i]) {
+					s.insert((long long)i * (n + 1) + j);
+					res.add(i, j, rng());
+				}
+			int i = n - 1;
+			while(i < m) {
+				int u = rnd.next(1, n), v = rnd.next(1, n);
+				if(u > v)	std::swap(u, v);
+				if(u == v)	continue;
+				if(s.count((long long)u * (n + 1) + v))	continue;
+				s.insert((long long)u * (n + 1) + v);
+				res.add(u, v, rng());
+				i++;
+			}
+			return res;
+		}
 } graph;
 }
 

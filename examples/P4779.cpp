@@ -1,4 +1,4 @@
-//#define FastIO
+#define FastIO
 #include "../axiom/axiom.hpp"
 #include <iostream>
 using namespace axiom;

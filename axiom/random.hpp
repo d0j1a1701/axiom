@@ -3,6 +3,7 @@
 
 #include <initializer_list>
 #include <iterator>
+#include <numeric>
 #include <random>
 #include <chrono>
 #include <vector>
@@ -81,20 +82,6 @@ struct xorshf128_64 {
 
 template<typename Rng = xorshf128>
 struct Random {
-	struct Sequence {
-		std::vector<unsigned long long> vec;
-		inline Sequence(int n, unsigned long long m, const Random &rnd) {
-			HashMap<unsigned long long, unsigned long long> rest(n);
-			vec.clear(), vec.resize(n);
-			for(int i = 0; i < n; i++)	vec[i] = i + 1;
-			for(int i = 0; i < n; i++) {
-				int j = rnd.next(i, m - 1);
-				if(j < n)	std::swap(vec[i], vec[j]);
-				else if(!rest.count(j))	rest[j] = vec[i], vec[i] = j + 1;
-				else std::swap(vec[i], rest[j]);
-			}
-		}
-	};
 	Rng random_base;
 	Random() {
 		random_base.seed(std::chrono::system_clock::now().time_since_epoch().count());
@@ -121,6 +108,36 @@ struct Random {
 	template<typename Tp>
 	Tp next(const std::initializer_list<Tp> &arr) {
 		return *(arr.begin() + next((size_t)0, arr.size() - 1));
+	}
+	template<class Tp, class = std::enable_if_t<std::is_integral_v<Tp> > >
+	inline std::vector<Tp> sequence(size_t n, Tp lo, Tp hi) {
+		if (!n) return {};
+		const auto len = hi - lo + 1;
+		if (len < 1024) { //O(m)
+			short tmp[len];
+			std::iota(tmp, tmp + len, 0);
+			shuffle(tmp, tmp + len);
+			std::vector<Tp> ret;
+			ret.resize(n);
+			for (size_t i = 0; i < n; ++i) ret[i] = lo + tmp[i];
+			return ret;
+		} else { //O(n)
+			HashMap<Tp, Tp> rest(n);
+			Tp tmp[n];
+			for (Tp i = 0; i < n; ++i) tmp[i] = lo + i;
+			for (Tp i = 0; i < n; ++i) {
+				const Tp j = rand(i, len - 1);
+				if (j < n) std::swap(tmp[i], tmp[j]);
+				else {
+					auto it = rest.find(j);
+					if (it == rest.end()) {
+						rest[j] = tmp[i];
+						tmp[i] = lo + j;
+					} else std::swap(tmp[i], it->second);
+				}
+			}
+			return std::vector<Tp>(tmp, tmp + n);
+		}
 	}
 };
 
