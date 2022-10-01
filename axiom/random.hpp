@@ -2,6 +2,7 @@
 #define AXIOM_RANDOM_HPP
 
 #include <initializer_list>
+#include <algorithm>
 #include <iterator>
 #include <numeric>
 #include <random>
@@ -88,17 +89,17 @@ struct Random {
 	}
 	template<typename Tp, typename std::enable_if<
 	             std::is_integral<Tp>::value>::type * = nullptr>
-	Tp next(Tp l, Tp r) {
+	inline Tp next(Tp l, Tp r) {
 		return fastrange::mapping((Tp)random_base(), l, r);
 	}
 	template<typename Tp, typename std::enable_if<
 	             std::is_floating_point<Tp>::value>::type * = nullptr>
-	Tp next(Tp l, Tp r) {
+	inline Tp next(Tp l, Tp r) {
 		return std::uniform_real_distribution<Tp> {l, r}(random_base);
 	}
 	template<typename Iter, typename std::enable_if<
 	             is_iterator<Iter>::value>::type * = nullptr>
-	Iter next(const Iter &a, const Iter &b) {
+	inline Iter next(const Iter &a, const Iter &b) {
 		return a + next((size_t)0, std::distance(a, b) - 1);
 	}
 	template<typename Tp>
@@ -106,7 +107,7 @@ struct Random {
 		return *(begin(container) + next((size_t)0, container.size() - 1));
 	}
 	template<typename Tp>
-	Tp next(const std::initializer_list<Tp> &arr) {
+	inline Tp next(const std::initializer_list<Tp> &arr) {
 		return *(arr.begin() + next((size_t)0, arr.size() - 1));
 	}
 	template<class Tp, class = std::enable_if_t<std::is_integral_v<Tp> > >
@@ -116,7 +117,7 @@ struct Random {
 		if (len < 1024) { //O(m)
 			short tmp[len];
 			std::iota(tmp, tmp + len, 0);
-			shuffle(tmp, tmp + len);
+			std::shuffle(tmp, tmp + len, random_base);
 			std::vector<Tp> ret;
 			ret.resize(n);
 			for (size_t i = 0; i < n; ++i) ret[i] = lo + tmp[i];
@@ -126,14 +127,13 @@ struct Random {
 			Tp tmp[n];
 			for (Tp i = 0; i < n; ++i) tmp[i] = lo + i;
 			for (Tp i = 0; i < n; ++i) {
-				const Tp j = rand(i, len - 1);
+				const Tp j = next(i, len - 1);
 				if (j < n) std::swap(tmp[i], tmp[j]);
 				else {
-					auto it = rest.find(j);
-					if (it == rest.end()) {
+					if (!rest.count(j)) {
 						rest[j] = tmp[i];
 						tmp[i] = lo + j;
-					} else std::swap(tmp[i], it->second);
+					} else std::swap(tmp[i], rest[j]);
 				}
 			}
 			return std::vector<Tp>(tmp, tmp + n);

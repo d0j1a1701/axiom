@@ -121,30 +121,20 @@ class GraphFactory {
 		template <typename dir = undirected>
 		inline Graph<unweighted, dir> regular(int n, int m) {
 			Graph<unweighted, dir> res(n);
-			HashSet<long long> s(m);
-			while(m) {
-				int u = rnd.next(1, n), v = rnd.next(1, n);
-				if(u > v)	std::swap(u, v);
-				if(u == v)	continue;
-				if(s.count((long long)u * (n + 1) + v))	continue;
-				s.insert((long long)u * (n + 1) + v);
-				res.add(u, v);
-				m--;
+			auto vec = rnd.sequence(m, 1ll, (long long)n * (n - 1) >> 1);
+			for(auto x : vec) {
+				auto edge = calc_uv(n, x);
+				res.add(edge.first, edge.second);
 			}
 			return res;
 		}
 		template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
 		inline Graph<Tp, dir> regular(int n, int m, wg rng = {1, 1}) {
 			Graph<Tp, dir> res(n);
-			HashSet<long long> s(m);
-			while(m) {
-				int u = rnd.next(1, n), v = rnd.next(1, n);
-				if(u > v)	std::swap(u, v);
-				if(u == v)	continue;
-				if(s.count((long long)u * (n + 1) + v))	continue;
-				s.insert((long long)u * (n + 1) + v);
-				res.add(u, v, rng());
-				m--;
+			auto vec = rnd.sequence(m, 1ll, (long long)n * (n - 1) >> 1);
+			for(auto x : vec) {
+				auto edge = calc_uv(n, x);
+				res.add(edge.first, edge.second, rng());
 			}
 			return res;
 		}
