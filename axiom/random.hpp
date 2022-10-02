@@ -8,6 +8,7 @@
 #include <random>
 #include <chrono>
 #include <vector>
+#include <limits>
 
 #include "hmap.hpp"
 #include "misc.hpp"
@@ -49,15 +50,23 @@ inline unsigned long long mapping(unsigned long long base, unsigned long long l,
 }
 };
 
-struct xorshf128 {
+template<typename Tp>
+struct xorshf128_base {
+	using result_type = Tp;
 	unsigned long long a = 114514, b = 362436069, t = 1919810;
-	xorshf128(unsigned int seed = 114514) {
+	inline constexpr static result_type max() {
+		return std::numeric_limits<result_type>::max();
+	}
+	inline constexpr static result_type min() {
+		return std::numeric_limits<result_type>::min();
+	}
+	xorshf128_base(Tp seed = 114514) {
 		a = seed;
 	}
-	inline void seed(unsigned int s) {
+	inline void seed(Tp s) {
 		a = s;
 	}
-	inline unsigned int operator()() {
+	inline Tp operator()() {
 		a ^= a << 23, a ^= a >> 18;
 		a ^= b, a ^= b >> 5;
 		t = a, a = b, b = t;
@@ -65,21 +74,8 @@ struct xorshf128 {
 	}
 };
 
-struct xorshf128_64 {
-	unsigned long long a = 114514, b = 362436069, t = 1919810;
-	xorshf128_64(unsigned long long seed = 114514) {
-		a = seed;
-	}
-	inline void seed(unsigned long long s) {
-		a = s;
-	}
-	inline unsigned long long operator()() {
-		a ^= a << 23, a ^= a >> 18;
-		a ^= b, a ^= b >> 5;
-		t = a, a = b, b = t;
-		return a + b;
-	}
-};
+using xorshf128 = xorshf128_base<unsigned int>;
+using xorshf128_64 = xorshf128_base<unsigned long long>;
 
 template<typename Rng = xorshf128>
 struct Random {
@@ -114,9 +110,9 @@ struct Random {
 	inline std::vector<Tp> sequence(size_t n, Tp lo, Tp hi) {
 		if (!n) return {};
 		const auto len = hi - lo + 1;
-		if (len < 1024) { //O(m)
-			short tmp[len];
-			std::iota(tmp, tmp + len, 0);
+		if (len <= 1000000 && false) { //O(m)
+			Tp *tmp = new Tp[len];
+			std::iota(tmp, tmp + len, (Tp)0);
 			std::shuffle(tmp, tmp + len, random_base);
 			std::vector<Tp> ret;
 			ret.resize(n);
@@ -124,9 +120,9 @@ struct Random {
 			return ret;
 		} else { //O(n)
 			HashMap<Tp, Tp> rest(n);
-			Tp tmp[n];
-			for (Tp i = 0; i < n; ++i) tmp[i] = lo + i;
-			for (Tp i = 0; i < n; ++i) {
+			Tp *tmp = new Tp[n];
+			for (Tp i = 0; i < n; i++) tmp[i] = lo + i;
+			for (Tp i = 0; i < n; i++) {
 				const Tp j = next(i, len - 1);
 				if (j < n) std::swap(tmp[i], tmp[j]);
 				else {

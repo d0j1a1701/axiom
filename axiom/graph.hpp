@@ -118,7 +118,7 @@ class GraphFactory {
 			return std::make_pair(u, v);
 		}
 	public:
-		template <typename dir = undirected>
+		template <typename dir = undirected, class = std::enable_if_t<std::is_same<undirected, dir>::value > >
 		inline Graph<unweighted, dir> regular(int n, int m) {
 			Graph<unweighted, dir> res(n);
 			auto vec = rnd.sequence(m, 1ll, (long long)n * (n - 1) >> 1);
@@ -128,17 +128,18 @@ class GraphFactory {
 			}
 			return res;
 		}
-		template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
+		template <typename Tp, typename dir = undirected, typename wg = WeightGenerator<Tp> >
 		inline Graph<Tp, dir> regular(int n, int m, wg rng = {1, 1}) {
 			Graph<Tp, dir> res(n);
 			auto vec = rnd.sequence(m, 1ll, (long long)n * (n - 1) >> 1);
 			for(auto x : vec) {
 				auto edge = calc_uv(n, x);
+				printf("%lld: %d %d\n", x, edge.first, edge.second);
 				res.add(edge.first, edge.second, rng());
 			}
 			return res;
 		}
-		template <typename dir = undirected>
+		template <typename dir = undirected, class = std::enable_if_t<std::is_same<undirected, dir>::value > >
 		inline Graph<unweighted, dir> tree(int n, double chain = 0, double flower = 0) {
 			Graph<unweighted, dir> res(n);
 			int chain_count = std::min((int)((n - 1) * chain), n - 1);
@@ -150,7 +151,7 @@ class GraphFactory {
 			for(int i = n - random_count + 1; i <= n; i++)	res.add(rnd.next(1, i - 1), i);
 			return res;
 		}
-		template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
+		template <typename Tp, typename dir = undirected, typename wg = WeightGenerator<Tp> >
 		inline Graph<Tp, dir> tree(int n, wg rng = {1, 1}, double chain = 0, double flower = 0) {
 			Graph<Tp, dir> res(n);
 			int chain_count = std::min((int)((n - 1) * chain), n - 1);
@@ -162,23 +163,23 @@ class GraphFactory {
 			for(int i = n - random_count + 1; i <= n; i++)	res.add(rnd.next(1, i - 1), i, rng());
 			return res;
 		}
-		template <typename dir = undirected>
+		template <typename dir = undirected, class = std::enable_if_t<std::is_same<undirected, dir>::value > >
 		inline Graph<unweighted, dir> chain(int n) {
 			return tree<dir>(n, 1, 0);
 		}
-		template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
+		template <typename Tp, typename dir = undirected, typename wg = WeightGenerator<Tp> >
 		inline Graph<Tp, dir> chain(int n, wg rng = {1, 1}) {
 			return tree<Tp, dir>(n, rng, 1, 0);
 		}
-		template <typename dir = undirected>
+		template <typename dir = undirected, class = std::enable_if_t<std::is_same<undirected, dir>::value > >
 		inline Graph<unweighted, dir> flower(int n) {
 			return tree<dir>(n, 0, 1);
 		}
-		template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
+		template <typename Tp, typename dir = undirected, typename wg = WeightGenerator<Tp> >
 		inline Graph<Tp, dir> flower(int n, wg rng = {1, 1}) {
 			return tree<Tp, dir>(n, rng, 0, 1);
 		}
-		template <typename dir = undirected>
+		template <typename dir = undirected, class = std::enable_if_t<std::is_same<undirected, dir>::value > >
 		inline Graph<unweighted, dir> DAG(int n, int m) {
 			Graph<unweighted, dir> res(n);
 			HashSet<long long> s(m);
@@ -200,7 +201,7 @@ class GraphFactory {
 			}
 			return res;
 		}
-		template <typename Tp, typename dir, typename wg = WeightGenerator<Tp> >
+		template <typename Tp, typename dir = undirected, typename wg = WeightGenerator<Tp> >
 		inline Graph<Tp, dir> DAG(int n, int m, wg rng = {1, 1}) {
 			HashSet<long long> s(m);
 			Graph<Tp, dir> res(n);
