@@ -9,6 +9,7 @@
 #include <chrono>
 #include <vector>
 #include <limits>
+#include <map>
 
 #include "hmap.hpp"
 #include "misc.hpp"
@@ -77,7 +78,7 @@ struct xorshf128_base {
 using xorshf128 = xorshf128_base<unsigned int>;
 using xorshf128_64 = xorshf128_base<unsigned long long>;
 
-template<typename Rng = xorshf128>
+template<typename Rng>
 struct Random {
 	Rng random_base;
 	Random() {
@@ -106,11 +107,11 @@ struct Random {
 	inline Tp next(const std::initializer_list<Tp> &arr) {
 		return *(arr.begin() + next((size_t)0, arr.size() - 1));
 	}
-	template<class Tp, class = std::enable_if_t<std::is_integral_v<Tp> > >
+	template<class Tp, class = typename std::enable_if<std::is_integral<Tp>::value>::type >
 	inline std::vector<Tp> sequence(size_t n, Tp lo, Tp hi) {
 		if (!n) return {};
 		const auto len = hi - lo + 1;
-		if (len <= 1000000 && false) { //O(m)
+		if (len <= 1000000) { //O(m)
 			Tp *tmp = new Tp[len];
 			std::iota(tmp, tmp + len, (Tp)0);
 			std::shuffle(tmp, tmp + len, random_base);
@@ -119,7 +120,7 @@ struct Random {
 			for (size_t i = 0; i < n; ++i) ret[i] = lo + tmp[i];
 			return ret;
 		} else { //O(n)
-			HashMap<Tp, Tp> rest(n);
+			std::map<Tp, Tp> rest;
 			Tp *tmp = new Tp[n];
 			for (Tp i = 0; i < n; i++) tmp[i] = lo + i;
 			for (Tp i = 0; i < n; i++) {
@@ -137,7 +138,7 @@ struct Random {
 	}
 };
 
-Random<xorshf128> rnd;
+Random<xorshf128_64> rnd;
 
 };
 #endif

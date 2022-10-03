@@ -15,7 +15,7 @@ namespace axiom {
 template<typename Key, typename Value, typename hs = std::hash<Key> >
 class HashMap {
 		using pkv = std::pair<Key, Value>;
-		const double alpha = 0.8;
+		const double alpha = 0.75;
 		const size_t npos = -1ull;
 		std::vector<unsigned long>::const_iterator size_iter = constant::prime_list.begin();
 		std::vector<bool> used;

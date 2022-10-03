@@ -121,8 +121,7 @@ class GraphFactory {
 		template <typename dir = undirected, class = std::enable_if_t<std::is_same<undirected, dir>::value > >
 		inline Graph<unweighted, dir> regular(int n, int m) {
 			Graph<unweighted, dir> res(n);
-			auto vec = rnd.sequence(m, 1ll, (long long)n * (n - 1) >> 1);
-			for(auto x : vec) {
+			for(auto x : rnd.sequence(m, 1ll, (long long)n * (n - 1) >> 1)) {
 				auto edge = calc_uv(n, x);
 				res.add(edge.first, edge.second);
 			}
@@ -131,10 +130,8 @@ class GraphFactory {
 		template <typename Tp, typename dir = undirected, typename wg = WeightGenerator<Tp> >
 		inline Graph<Tp, dir> regular(int n, int m, wg rng = {1, 1}) {
 			Graph<Tp, dir> res(n);
-			auto vec = rnd.sequence(m, 1ll, (long long)n * (n - 1) >> 1);
-			for(auto x : vec) {
+			for(auto x : rnd.sequence(m, 1ll, (long long)n * (n - 1) >> 1)) {
 				auto edge = calc_uv(n, x);
-				printf("%lld: %d %d\n", x, edge.first, edge.second);
 				res.add(edge.first, edge.second, rng());
 			}
 			return res;
@@ -182,44 +179,24 @@ class GraphFactory {
 		template <typename dir = undirected, class = std::enable_if_t<std::is_same<undirected, dir>::value > >
 		inline Graph<unweighted, dir> DAG(int n, int m) {
 			Graph<unweighted, dir> res(n);
-			HashSet<long long> s(m);
-			auto buf = tree(n);
-			for(int i = 1; i <= n; i++)
-				for(int j : buf.edges[i]) {
-					s.insert((long long)i * (n + 1) + j);
-					res.add(i, j);
-				}
+			for(int i = 2; i <= n; i++)
+				res.add(1, i);
 			int i = n - 1;
-			while(i < m) {
-				int u = rnd.next(1, n), v = rnd.next(1, n);
-				if(u > v)	std::swap(u, v);
-				if(u == v)	continue;
-				if(s.count((long long)u * (n + 1) + v))	continue;
-				s.insert((long long)u * (n + 1) + v);
-				res.add(u, v);
-				i++;
+			for(auto x : rnd.sequence(m - n + 1, (long long)n, (long long)n * (n - 1) >> 1)) {
+				auto edge = calc_uv(n, x);
+				res.add(edge.first, edge.second);
 			}
 			return res;
 		}
 		template <typename Tp, typename dir = undirected, typename wg = WeightGenerator<Tp> >
 		inline Graph<Tp, dir> DAG(int n, int m, wg rng = {1, 1}) {
-			HashSet<long long> s(m);
 			Graph<Tp, dir> res(n);
-			auto buf = tree(n);
-			for(int i = 1; i <= n; i++)
-				for(int j : buf.edges[i]) {
-					s.insert((long long)i * (n + 1) + j);
-					res.add(i, j, rng());
-				}
+			for(int i = 2; i <= n; i++)
+				res.add(1, i, rng());
 			int i = n - 1;
-			while(i < m) {
-				int u = rnd.next(1, n), v = rnd.next(1, n);
-				if(u > v)	std::swap(u, v);
-				if(u == v)	continue;
-				if(s.count((long long)u * (n + 1) + v))	continue;
-				s.insert((long long)u * (n + 1) + v);
-				res.add(u, v, rng());
-				i++;
+			for(auto x : rnd.sequence(m - n + 1, (long long)n, (long long)n * (n - 1) >> 1)) {
+				auto edge = calc_uv(n, x);
+				res.add(edge.first, edge.second, rng());
 			}
 			return res;
 		}

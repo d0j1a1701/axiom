@@ -12,7 +12,7 @@ namespace axiom {
 
 template<typename Tp, typename hs = std::hash<Tp> >
 class HashSet {
-		const double alpha = 0.8;
+		const double alpha = 0.75;
 		std::vector<unsigned long>::const_iterator size_iter = constant::prime_list.begin();
 		std::vector<bool> used;
 		std::vector<Tp> vec;

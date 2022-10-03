@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <string>
 #include <cmath>
+#include <vector>
 
 #include "graph.hpp"
 #include "misc.hpp"
@@ -19,7 +20,7 @@ struct IO {
 				int k = 2;
 				FILE *f = nullptr;
 #ifdef FastIO
-				const static int BUFSIZE = 1 << 16;
+				const static int BUFSIZE = 1 << 20;
 				char *obuf, *pp;
 #endif
 			public:
@@ -103,8 +104,13 @@ struct IO {
 				template < typename Tp, typename dir, typename std::enable_if < !std::is_same<Tp, unweighted>::value >::type * = nullptr >
 				inline const Printer & write(Graph<Tp, dir> g) {
 					for(int i = 1; i <= g.n; i++)
-						for(auto edge : g.edges[i])
+						for(const auto &edge : g.edges[i])
 							writeln(i, edge.v, edge.w);
+					return *this;
+				}
+				template<typename Tp>
+				inline const Printer &write(const std::vector<Tp> &vec) {
+					for(const auto &x : vec)	write(x), write(' ');
 					return *this;
 				}
 				template<typename Tp, typename... Ts>

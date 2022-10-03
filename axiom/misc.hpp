@@ -2,6 +2,7 @@
 #define AXIOM_MISC_HPP
 
 #include <initializer_list>
+#include <stdint.h>
 #include <string>
 #include <vector>
 #include <chrono>
@@ -12,7 +13,10 @@ const double e = 2.71828182845;
 const std::string lower = "abcdefghijklmnopqrstuvwxyz";
 const std::string upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const std::string numbers = "0123456789";
+const std::string hexdigits = "0123456789abcdef";
+const std::string digits = "0123456789";
+const std::string whitespace = "\t\n";
+const std::string punctuation = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 const long long pow10[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000, 100000000000, 1000000000000, 10000000000000, 100000000000000, 1000000000000000, 10000000000000000};
 };
 namespace axiom {
@@ -44,6 +48,7 @@ inline std::vector<long long> d2ll(std::initializer_list<double> arr) {
 	for(double x : arr)   res[i++] = x;
 	return res;
 }
+
 struct exhash { //虽然我觉得应该没有人会去Hack自己 但最好预防一下
 	inline uint64_t splitmix64(uint64_t x) const {
 		// http://xorshift.di.unimi.it/splitmix64.c
